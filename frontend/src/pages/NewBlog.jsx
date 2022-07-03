@@ -8,13 +8,16 @@ import { toast } from "react-toastify";
 import { createBlog, reset } from "../features/blogs/blogSlice";
 import uploadImage from "../components/uploadImage";
 import Spinner from "../components/Spinner";
+import CustomOption from "../components/CustomOption";
+import CustomTable from "../components/CustomTable";
+import ColorPic from "../components/ColorPic.jsx";
 
 const NewBlog = () => {
-  const { user } = useSelector((state) => state.auth);
+  // const { user } = useSelector((state) => state.auth);
   const { isLoading, isError, isSuccess, message } = useSelector(
     (state) => state.blogs
   );
-  const [name] = useState(user.name);
+  // const [name] = useState(user.name);
 
   const [editorState, setEditorState] = useState(() =>
     EditorState.createEmpty()
@@ -34,21 +37,30 @@ const NewBlog = () => {
       dispatch(reset());
       navigate("/blogs");
     }
-  }, [dispatch, isError, isSuccess, navigate]);
+  }, [dispatch, isError, isSuccess, message, navigate]);
 
-  const uploadImageCallback = (file) => {
-    return new Promise((resolve, reject) => {
-      uploadImage(file)
-        .then((link) => {
-          resolve({ data: { link } });
-        })
-        .catch((error) => {
-          reject(error);
-        });
-    });
+  // const uploadImageCallback = (file) => {
+  //   return new Promise((resolve, reject) => {
+  //     uploadImage(file)
+  //       .then((link) => {
+  //         resolve({ data: { link } });
+  //       })
+  //       .catch((error) => {
+  //         reject(error);
+  //       });
+  //   });
+  // };
+
+  const uploadImageCallback = async (file) => {
+    try {
+      const link = await uploadImage(file);
+      return { data: { link } };
+    } catch (error) {
+      return error;
+    }
   };
 
-  const onEditorStateChange = (currentState) => {
+  const handleEditorChange = (currentState) => {
     setEditorState(currentState);
   };
 
@@ -120,12 +132,21 @@ const NewBlog = () => {
             editorClassName='editorClassName'
             wrapperStyle={wrapperStyle}
             editorState={editorState}
-            onEditorStateChange={onEditorStateChange}
+            onEditorStateChange={handleEditorChange}
+            toolbarCustomButtons={[<CustomOption />, <CustomTable />]}
             toolbar={{
-              inline: { inDropdown: true },
+              colorPicker: { component: ColorPic },
+              inline: {
+                inDropdown: false,
+                options: ["bold", "italic", "underline"],
+              },
               list: { inDropdown: true },
               textAlign: { inDropdown: true },
-              link: { inDropdown: true },
+              link: {
+                popupClassName: "demo-popup-custom",
+                link: { className: "demo-option-custom" },
+                unlink: { className: "demo-option-custom" },
+              },
               history: { inDropdown: true },
               image: {
                 uploadCallback: uploadImageCallback,

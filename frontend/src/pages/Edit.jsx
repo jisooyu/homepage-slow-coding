@@ -9,9 +9,10 @@ import { toast } from "react-toastify";
 import { getBlog, updateBlog } from "../features/blogs/blogSlice";
 import uploadImage from "../components/uploadImage";
 import Spinner from "../components/Spinner";
+import ColorPic from "../components/ColorPic.jsx";
 
 function Edit() {
-  const { user } = useSelector((state) => state.auth);
+  // const { user } = useSelector((state) => state.auth);
   const { blog, isLoading, isSuccess, isError, message } = useSelector(
     (state) => state.blogs
   );
@@ -19,7 +20,7 @@ function Edit() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { blogid } = useParams();
-  const [name] = useState(user.name);
+  // const [name] = useState(user.name);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
@@ -32,6 +33,7 @@ function Edit() {
     setTitle(blog.title);
     setCategory(blog.category);
     setStatus(blog.status);
+    // eslint-disable-next-line
   }, [dispatch, isError, isSuccess, message, navigate]);
 
   const initialState = blog.contentState
@@ -46,20 +48,16 @@ function Edit() {
     return <h3>Something went wrong in Edit.jsx</h3>;
   }
 
-  const uploadImageCallback = (file) => {
-    return new Promise((resolve, reject) => {
-      console.log("uploading image...");
-      uploadImage(file)
-        .then((link) => {
-          resolve({ data: { link } });
-        })
-        .catch((error) => {
-          reject(error);
-        });
-    });
+  const uploadImageCallback = async (file) => {
+    try {
+      const link = await uploadImage(file);
+      return { data: { link } };
+    } catch (error) {
+      return error;
+    }
   };
 
-  const onEditorStateChange = (editorState) => {
+  const handleEditorChange = (editorState) => {
     setEditorState(editorState);
   };
 
@@ -136,6 +134,7 @@ function Edit() {
             wrapperStyle={wrapperStyle}
             editorState={editorState}
             toolbar={{
+              colorPicker: { component: ColorPic },
               inline: { inDropdown: true },
               list: { inDropdown: true },
               textAlign: { inDropdown: true },
@@ -147,7 +146,7 @@ function Edit() {
               },
             }}
             localization={{ locale: "ko" }}
-            onEditorStateChange={onEditorStateChange}
+            onEditorStateChange={handleEditorChange}
           />
         </div>
         <button className='mt-12'>Submit</button>
